@@ -9,7 +9,7 @@
  * available remote server.
  */
 
-var m = require("./")({ client : true });
+var m = require("../")({ client : true });
 
 var servers = [];
 var server;

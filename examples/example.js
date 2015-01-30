@@ -1,4 +1,4 @@
-var m = require("./")();
+var m = require("../")();
 
 m.on("inbound", function (remote) {
 	remote.write("hello inbound connection\n");
