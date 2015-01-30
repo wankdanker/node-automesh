@@ -37,9 +37,11 @@ api
 var mesh = automesh([options]);
 ```
 
-* options is an optional object to be passed to the underlying
-node-discover instance. See [the documentation](https://github.com/wankdanker/node-discover/#constructor)
-for that.
+* options is an optional configuration object
+	* options.client
+	* options.server
+	* all other options are passed to the underlying [node-discover](https://github.com/wankdanker/node-discover/#constructor)
+	constructor.
 
 events
 ------
