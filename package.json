@@ -1,6 +1,6 @@
 {
   "name": "automesh",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Automatically listen on random port and connect to other nodes on their random port",
   "main": "index.js",
   "dependencies": {
@@ -14,8 +14,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "bin" : {
-    "automesh" : "./bin/automesh"
+  "bin": {
+    "automesh": "./bin/automesh"
   },
   "repository": {
     "type": "git",
