@@ -122,7 +122,7 @@ license
 
 MIT
 
-[1] : https://github.com/wankdanker/node-discover/issues/7#issuecomment-72145016
-[2] : https://github.com/wankdanker/node-automesh/tree/v1.0.0
-[3] : https://github.com/wankdanker/node-discover
-[4] : https://github.com/wankdanker/node-discover/#constructor
+[1]: https://github.com/wankdanker/node-discover/issues/7#issuecomment-72145016
+[2]: https://github.com/wankdanker/node-automesh/tree/v1.0.0
+[3]: https://github.com/wankdanker/node-discover
+[4]: https://github.com/wankdanker/node-discover/#constructor
