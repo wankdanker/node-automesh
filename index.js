@@ -3,6 +3,7 @@ var discover = require("node-discover")
 	, getPort = require("get-port")
 	, EventEmitter = require("events").EventEmitter
 	, inherits = require("util").inherits
+	, semver = require('semver')
 	;
 
 module.exports = function (options) {
@@ -14,19 +15,27 @@ function AutoMesh (options) {
 	options = options || {};
 
 	var self = this;
-	var d = self.discover = discover(options);
 	var doListen = options.server || (!options.server && !options.client);
 	var doConnect = options.client || (!options.server && !options.client);
 	var service = (options.service || "").split("@")[0] || null;
 	var version = (options.service || "").split("@")[1] || null;
 
+	if (!doConnect) {
+		//enable node-discover client only mode
+		options.client = true;
+	}
+
+	var d = self.discover = discover(options);
+
 	self.services = {};
 
 	if (doConnect) {
 		d.on('added', function (node) {
-			if (!node.advertisement.port) {
+			if (!node.advertisement || !node.advertisement.port) {
 				//remote node is not advertising a port
-				//it must not be listening.
+				//it must not be listening or is part of
+				//some other node-discover network running
+				//on the same port
 				return;
 			}
 
@@ -36,16 +45,19 @@ function AutoMesh (options) {
 				self.emit("server", node.connection, node);
 
 				if (node.advertisement.service) {
-					var key = genKey(node.advertisement.service, node.advertisement.version);
-					var services = self.services[key] = self.services[key] || [];
-					services.push(node.connection);
+					var version = node.advertisement.version || null;
+					var service = node.advertisement.service;
+					var versions = self.services[service] = self.services[service] || {};
+					var versionList = versions[version] = versions[version] || [];
 
-					self.emit(node.advertisement.service, node.connection, node.advertisement.version);
-					
+					versionList.push(node.connection);
+
 					//when the connection ends, remove it from the services array
-					node.connection.on('end', function () {
-						services.splice(services.indexOf(node.connection), 1);
+					node.connection.on('close', function () {
+						versionList.splice(versionList.indexOf(node.connection), 1);
 					});
+
+					self.emit(service, node.connection, version);
 				}
 			});
 		});
@@ -78,30 +90,66 @@ function AutoMesh (options) {
 
 inherits(AutoMesh, EventEmitter);
 
-AutoMesh.prototype.get = function (key, cb) {
+AutoMesh.prototype.require = function (key, cb) {
 	var self = this;
-	var service = key.split('@')[0];
-	var version = key.split('@')[1];
+	var service = key.split('@')[0] || null;
+	var version = key.split('@')[1] || null;
+	var canCallback = true;
 	
-	//TODO loop through all the services to find semver
-	//compatible services
-	if (self.services[key] && self.services[key].length) {
-		//TODO: toggle for returning random, round robin, or first service entry?
-		return cb(null, self.services[key][0], version);
+	self.on(service, function (remote, v) {
+		//check for exact version match match
+		if (v == version) {
+			//TODO: watch remote.on('end') and auto failover
+			return maybeCallback([remote], v);
+		}
+
+		if (semver.satisfies(v, version)) {
+			//TODO: on remote.on('end') check to see if another server is available
+			// and call the callback again.
+			return maybeCallback([remote], v);
+		}
+	});
+
+	evaluateServices();
+
+	function evaluateServices() {
+		if (self.services[service]) {
+			var versions = self.services[service];
+
+			//if exact match exists, return that
+			if (versions[version]) {
+				return maybeCallback(versions[version], version);
+			}
+
+			var versionList = Object.keys(services[service]);
+			var v;
+
+			//loop through each service version and find one that satisfies semver
+			for (var x = 0; x < versionsList.length; x++) {
+				v = versionsList[x];
+
+				if (semver.satisfies(v, version) && versions[v].length) {
+					return maybeCallback(versions[v], v);
+				}
+			}
+		}
 	}
 
-	self.on(service, function (remote, version) {
-		//TODO: check to see if version satisfies semver
-		//TODO: on remote.on('end') check to see if another server is available
-		// and call the callback again.
+	function maybeCallback(remotes, version) {
+		if (!canCallback || !remotes.length) {
+			return;
+		}
+
+		//TODO: return random/roundrobin/etc from remotes
+		var remote = remotes[0];
+
+		remote.on('close', function () {
+			canCallback = true;
+			evaluateServices();
+		});
+
+		canCallback = false;
+
 		return cb(null, remote, version);
-	});
+	}
 };
-
-function genKey (service, version) {
-	return (version) 
-		? [service, version].join('@')
-		: service
-		;
-}
-

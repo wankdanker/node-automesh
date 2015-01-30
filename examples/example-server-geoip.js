@@ -1,4 +1,4 @@
-var m = require("../")({ server : true, service : 'geoip@1.2.3' });
+var m = require("../")({ server : true, service : 'geoip' });
 
 m.on("client", function (client) {
 	client.write("hello inbound connection i am the server\n");
