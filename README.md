@@ -46,20 +46,26 @@ var mesh = automesh([options]);
 events
 ------
 
-### inbound
+### inbound/client
 
-Called when an inbound connection has been established.
+Called when an inbound connection has been established
+from a remote client.
 
 ```js
 mesh.on('inbound', function (remote) {});
+// or
+mesh.on('client', function (remote) {});
 ```
 
-### outbound
+### outbound/server
 
-Called when an outbound connection has been established.
+Called when an outbound connection has been established
+to a remote server.
 
 ```js
 mesh.on('outbound', function (remote, node) {});
+// or
+mesh.on('server', function (remote, node) {});
 ```
 
 license
