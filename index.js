@@ -10,6 +10,8 @@ module.exports = function (options) {
 	return new AutoMesh(options);
 };
 
+AutoMesh.types = {};
+
 function AutoMesh (options) {
 	EventEmitter.call(this);
 	options = options || {};
@@ -19,6 +21,7 @@ function AutoMesh (options) {
 	var doConnect = options.client || (!options.server && !options.client);
 	var service = (options.service || "").split("@")[0] || null;
 	var version = (options.service || "").split("@")[1] || null;
+	var type = options.type || null;
 
 	if (!doConnect) {
 		//enable node-discover client only mode
@@ -28,6 +31,7 @@ function AutoMesh (options) {
 	var d = self.discover = discover(options);
 
 	self.services = {};
+	self.types = {};
 	self.shuttingDown = false;
 
 	if (doConnect) {
@@ -42,6 +46,8 @@ function AutoMesh (options) {
 
 			//connect to the newly discovered node
 			node.connection = net.createConnection(node.advertisement.port, node.address, function () {
+				node.connection.automeshNode = node;
+
 				self.emit("outbound", node.connection, node);	
 				self.emit("server", node.connection, node);
 
@@ -77,6 +83,8 @@ function AutoMesh (options) {
 				return console.log(err);
 			}
 
+			self.port = port;
+
 			server.listen(port);
 
 			//advertise what port we are listening on
@@ -84,6 +92,7 @@ function AutoMesh (options) {
 				port : port
 				, service : service
 				, version : version
+				, type : type
 			});
 		});
 	}
@@ -160,6 +169,7 @@ AutoMesh.prototype.require = function (key, cb) {
 
 		//TODO: return random/roundrobin/etc from remotes
 		var remote = remotes[0];
+		var node = remote.automeshNode;
 
 		remote.on('close', function () {
 			canCallback = true;
@@ -168,7 +178,38 @@ AutoMesh.prototype.require = function (key, cb) {
 
 		canCallback = false;
 
-		return cb(null, remote, version);
+		if (!node || !node.advertisement || !node.advertisement.type) {
+			//not type was available, just hand off the socket
+			return cb(null, remote, version);
+		}
+
+		var type = node.advertisement.type;
+
+		//try to handle the type by types registered in this instance
+		if (self.types[type]) {
+			return self.types[type](remote, function (err, obj) {
+				cb(err, obj, version);
+			});
+		}
+
+		//try to handle the type by types registered on the module
+		if (AutoMesh.types[type]) {
+			return AutoMesh.types[type](remote, function (err, obj) {
+				cb(err, obj, version);
+			});
+		}
+
+		//try to handle the type by an external module
+		try {
+			var handler = require('automesh-' + type);
+
+			handler(remote, function (err, obj) {
+				cb(err, obj, version);
+			});
+		}
+		catch (err) {
+			return cb(err, remote, version);
+		}
 	}
 };
 
