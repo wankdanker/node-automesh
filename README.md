@@ -65,6 +65,11 @@ services.
 This is a synchronous function that will return an array of services
 currently available. If no service is provided all services are returned.
 
+### mesh.register(service[, type])
+
+* service - service name or servicename@semver to register
+* type - optional, the type of sevice. Used to tell the client how to process the stream
+
 ### mesh.require(service, callback)
 
 * service - service name or servicename@semver to request

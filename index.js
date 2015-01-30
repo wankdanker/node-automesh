@@ -91,6 +91,23 @@ function AutoMesh (options) {
 
 inherits(AutoMesh, EventEmitter);
 
+AutoMesh.prototype.register = function (service, type) {
+	var self = this;
+	//TODO: this is duplicated from above; make a single function for it
+	//or something
+	var service = (options.service || "").split("@")[0] || null;
+	var version = (options.service || "").split("@")[1] || null;
+
+	self.discover.advertise({
+		port : self.port
+		, service : service
+		, version : version
+		, type : type
+	});
+
+	return self.port;
+};
+
 AutoMesh.prototype.require = function (key, cb) {
 	var self = this;
 	var service = key.split('@')[0] || null;
