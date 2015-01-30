@@ -4,13 +4,18 @@
   "description": "Automatically listen on random port and connect to other nodes on their random port",
   "main": "index.js",
   "dependencies": {
+    "commander": "^2.6.0",
     "get-port": "^1.0.0",
     "node-discover": "0.0.15",
-    "semver": "^4.2.0"
+    "semver": "^4.2.0",
+    "text-table": "^0.2.0"
   },
   "devDependencies": {},
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "bin" : {
+    "automesh" : "./bin/automesh"
   },
   "repository": {
     "type": "git",

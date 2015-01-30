@@ -28,6 +28,7 @@ function AutoMesh (options) {
 	var d = self.discover = discover(options);
 
 	self.services = {};
+	self.shuttingDown = false;
 
 	if (doConnect) {
 		d.on('added', function (node) {
@@ -136,7 +137,7 @@ AutoMesh.prototype.require = function (key, cb) {
 	}
 
 	function maybeCallback(remotes, version) {
-		if (!canCallback || !remotes.length) {
+		if (!canCallback || !remotes.length || self.shuttingDown) {
 			return;
 		}
 
@@ -152,4 +153,38 @@ AutoMesh.prototype.require = function (key, cb) {
 
 		return cb(null, remote, version);
 	}
+};
+
+AutoMesh.prototype.query = function (service) {
+	var self = this;
+	var services = [];
+
+	self.discover.eachNode(function (node) {
+            if (!node.advertisement) {
+                return;
+            }
+
+            services.push({
+                service : node.advertisement.service || ""
+                , version : node.advertisement.version || ""
+                , address : node.address || ""
+                , port : node.advertisement.port || ""
+                , id : node.id
+		, connection : node.connection
+            });
+        });
+
+	return services;
+};
+
+AutoMesh.prototype.end = function () {
+	var self = this;
+
+	self.shuttingDown = true;
+	
+	self.query().forEach(function (service) {
+		service.connection.destroy();
+	});
+
+	self.discover.stop();
 };

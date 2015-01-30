@@ -1,0 +1,34 @@
+#!/usr/bin/env nodejs
+
+var program = require('commander')
+    , package = require('../package')
+    , automesh = require('../')
+    ;
+
+program
+    .version(package.version)
+    .option('-p, --port <n>', 'automesh discovery port', Number)
+    .option('-k, --key <s>', 'automesh discovery key', String)
+    .parse(process.argv);
+
+if (!program.args.length) {
+    program.help();
+
+}
+
+var mesh = automesh({ 
+	port : program.port
+	, key : program.key
+	, client : true //only do this when we aren't running something
+});
+
+var commands = {
+	list : require('./automesh-list')
+};
+
+(program.args || []).forEach(function (command) {
+	if (commands[command]) {
+		commands[command](program, mesh);
+	}
+});
+
