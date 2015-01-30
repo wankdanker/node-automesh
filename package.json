@@ -1,0 +1,30 @@
+{
+  "name": "automesh",
+  "version": "1.0.0",
+  "description": "Automatically listen on random port and connect to other nodes on their random port",
+  "main": "index.js",
+  "dependencies": {
+    "get-port": "^1.0.0",
+    "node-discover": "^0.0.14"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/wankdanker/node-automesh.git"
+  },
+  "keywords": [
+    "discover",
+    "mesh",
+    "remote",
+    "automatic"
+  ],
+  "author": "Dan VerWeire",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/wankdanker/node-automesh/issues"
+  },
+  "homepage": "https://github.com/wankdanker/node-automesh"
+}
