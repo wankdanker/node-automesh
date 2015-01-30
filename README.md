@@ -28,6 +28,13 @@ install
 npm install automesh
 ```
 
+cli
+
+```bash
+npm install -g automesh
+```
+
+
 api
 ---
 
@@ -41,10 +48,27 @@ var mesh = automesh([options]);
 	* options.service - a service name provided by the mesh node. Example: 'auth@1.2.3' or 'geoip'
 	* options.client - operate in client only mode. Disables outbound/server events (default: false)
 	* options.server - operate in server only mode. Disables inbound/client events (default: flase)
+	* options.port - discover port to use for UDP broadcast (passed to [node-discover][4])
+	* options.key - key used to encrypt broadcast traffic (passed to [node-discover][4])
 	* all other options are passed to the underlying [node-discover][4]
 	constructor.
 
-### mesh.require('service@x.x.x', function CallBack (err, remote, version) {})
+### mesh.end()
+
+Destroy all connections that have been established and stop discover
+services.
+
+### mesh.query([service])
+
+* service - optional - service name or servicename@semver to filter
+
+This is a synchronous function that will return an array of services
+currently available. If no service is provided all services are returned.
+
+### mesh.require(service, callback)
+
+* service - service name or servicename@semver to request
+* callback - function (err, remote, version) 
 
 Seaportish service registry callback. Get a callback when a mesh node
 appears on the network that provides a service that satisfies the semver portion
@@ -108,6 +132,13 @@ to a remote server.
 mesh.on('outbound', function (remote, node) {});
 // or
 mesh.on('server', function (remote, node) {});
+```
+
+cli
+---
+
+```bash
+$ automesh list
 ```
 
 inspiration
