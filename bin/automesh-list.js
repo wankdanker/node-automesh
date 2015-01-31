@@ -9,11 +9,11 @@ module.exports = function (program, mesh) {
     setTimeout(enumerateServices, 5000);
 
     function enumerateServices () {
-        var columns = ['service', 'version', 'type', 'address', 'port', 'id'];
+        var columns = ['service', 'version', 'type', 'hostname', 'address', 'port', 'id'];
         var data    = [columns];
         var services = mesh.query();
 
-        data.push(['----', '-------', '----', '-------', '----', '--']);
+        data.push(['-------', '-------', '----', '--------', '-------', '----', '--']);
 
         services.forEach(function (service) {
             var tmp = [];
@@ -25,7 +25,9 @@ module.exports = function (program, mesh) {
             data.push(tmp);
         });
 
-        console.log('\n', table(data));
+	process.stdout.write('\n');
+        process.stdout.write(table(data));
+	process.stdout.write('\n');
 
         mesh.end();
     }
