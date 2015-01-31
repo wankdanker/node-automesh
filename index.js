@@ -247,6 +247,7 @@ AutoMesh.prototype.query = function (service) {
                 , address : node.address || ""
                 , port : node.advertisement.port || ""
                 , id : node.id
+		, type : node.advertisement.type || ""
 		, connection : node.connection
             });
         });
