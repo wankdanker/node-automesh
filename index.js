@@ -19,86 +19,105 @@ function AutoMesh (options) {
 	var self = this;
 	var doListen = options.server || (!options.server && !options.client);
 	var doConnect = options.client || (!options.server && !options.client);
-	var service = (options.service || "").split("@")[0] || null;
-	var version = (options.service || "").split("@")[1] || null;
-	var type = options.type || null;
 
 	if (!doConnect) {
 		//enable node-discover client only mode
 		options.client = true;
 	}
 
-	var d = self.discover = discover(options);
-
+	self.service = (options.service || "").split("@")[0] || null;
+	self.version = (options.service || "").split("@")[1] || null;
+	self.type = options.type || null;
+	self.discover = discover(options);
 	self.services = {};
 	self.types = {};
 	self.shuttingDown = false;
 
 	if (doConnect) {
-		d.on('added', function (node) {
-			if (!node.advertisement || !node.advertisement.port) {
-				//remote node is not advertising a port
-				//it must not be listening or is part of
-				//some other node-discover network running
-				//on the same port
-				return;
-			}
-
-			//connect to the newly discovered node
-			node.connection = net.createConnection(node.advertisement.port, node.address, function () {
-				node.connection.automeshNode = node;
-
-				self.emit("outbound", node.connection, node);	
-				self.emit("server", node.connection, node);
-
-				if (node.advertisement.service) {
-					var version = node.advertisement.version || null;
-					var service = node.advertisement.service;
-					var versions = self.services[service] = self.services[service] || {};
-					var versionList = versions[version] = versions[version] || [];
-
-					versionList.push(node.connection);
-
-					//when the connection ends, remove it from the services array
-					node.connection.on('close', function () {
-						versionList.splice(versionList.indexOf(node.connection), 1);
-					});
-
-					self.emit(service, node.connection, version);
-				}
-			});
-		});
+		self._connect();
 	}
 
 	if (doListen) {
-		//create a tcp server
-		var server = net.createServer(function (c) {
-			self.emit("inbound", c);
-			self.emit("client", c);
-		});
-
-		//get a random local port to listen on
-		getPort(function (err, port) {
-			if (err) {
-				return console.log(err);
-			}
-
-			self.port = port;
-
-			server.listen(port);
-
-			//advertise what port we are listening on
-			d.advertise({
-				port : port
-				, service : service
-				, version : version
-				, type : type
-			});
-		});
+		self._listen();
 	}
 };
 
 inherits(AutoMesh, EventEmitter);
+
+AutoMesh.prototype._connect = function () {
+	var self = this;
+	var d = self.discover;
+	var service = self.service;
+	var version = self.version;
+	var type = self.type;
+
+	d.on('added', function (node) {
+		if (!node.advertisement || !node.advertisement.port) {
+			//remote node is not advertising a port
+			//it must not be listening or is part of
+			//some other node-discover network running
+			//on the same port
+			return;
+		}
+
+		//connect to the newly discovered node
+		node.connection = net.createConnection(node.advertisement.port, node.address, function () {
+			node.connection.automeshNode = node;
+
+			self.emit("outbound", node.connection, node);	
+			self.emit("server", node.connection, node);
+
+			if (node.advertisement.service) {
+				var version = node.advertisement.version || null;
+				var service = node.advertisement.service;
+				var versions = self.services[service] = self.services[service] || {};
+				var versionList = versions[version] = versions[version] || [];
+
+				versionList.push(node.connection);
+
+				//when the connection ends, remove it from the services array
+				node.connection.on('close', function () {
+					versionList.splice(versionList.indexOf(node.connection), 1);
+				});
+
+				self.emit(service, node.connection, version);
+			}
+		});
+	});
+};
+
+AutoMesh.prototype._listen = function () {
+	var self = this;
+	var d = self.discover;
+	var service = self.service;
+	var version = self.version;
+	var type = self.type;
+
+	//create a tcp server
+	var server = net.createServer(function (c) {
+		self.emit("inbound", c);
+		self.emit("client", c);
+	});
+
+	//get a random local port to listen on
+	getPort(function (err, port) {
+		if (err) {
+			return console.log(err);
+		}
+
+		self.port = port;
+
+		server.listen(port);
+
+		//advertise what port we are listening on
+		d.advertise({
+			port : port
+			, service : service
+			, version : version
+			, type : type
+		});
+	});
+};
 
 AutoMesh.prototype.register = function (service, type) {
 	var self = this;
