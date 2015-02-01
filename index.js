@@ -47,9 +47,6 @@ inherits(AutoMesh, EventEmitter);
 AutoMesh.prototype._connect = function () {
 	var self = this;
 	var d = self.discover;
-	var service = self.service;
-	var version = self.version;
-	var type = self.type;
 
 	d.on('added', function (node) {
 		if (!node.advertisement || !node.advertisement.services) {
@@ -154,10 +151,10 @@ AutoMesh.prototype._listen = function (service, version, type, cb) {
 	});
 };
 
-AutoMesh.prototype.register = function (service, type, cb) {
+AutoMesh.prototype.register = function (role, type, cb) {
 	var self = this;
-	var service = (service || "").split("@")[0] || null;
-	var version = (service || "").split("@")[1] || null;
+	var service = (role || "").split("@")[0] || null;
+	var version = (role || "").split("@")[1] || null;
 
 	return self._listen(service, version, type, cb);
 };
@@ -193,12 +190,12 @@ AutoMesh.prototype.require = function (key, cb) {
 				return maybeCallback(versions[version], version);
 			}
 
-			var versionList = Object.keys(services[service]);
+			var versionList = Object.keys(versions);
 			var v;
 
 			//loop through each service version and find one that satisfies semver
-			for (var x = 0; x < versionsList.length; x++) {
-				v = versionsList[x];
+			for (var x = 0; x < versionList.length; x++) {
+				v = versionList[x];
 
 				if (semver.satisfies(v, version) && versions[v].length) {
 					return maybeCallback(versions[v], v);
@@ -225,7 +222,7 @@ AutoMesh.prototype.require = function (key, cb) {
 
 		if (!service || !service.type) {
 			//not type was available, just hand off the socket
-			return cb(null, remote, version);
+			return cb(null, remote, version, node);
 		}
 
 		var type = service.type;
@@ -233,14 +230,14 @@ AutoMesh.prototype.require = function (key, cb) {
 		//try to handle the type by types registered in this instance
 		if (self.types[type]) {
 			return self.types[type](remote, function (err, obj) {
-				cb(err, obj, version);
+				cb(err, obj, version, node);
 			});
 		}
 
 		//try to handle the type by types registered on the module
 		if (AutoMesh.types[type]) {
 			return AutoMesh.types[type](remote, function (err, obj) {
-				cb(err, obj, version);
+				cb(err, obj, version, node);
 			});
 		}
 
@@ -249,11 +246,11 @@ AutoMesh.prototype.require = function (key, cb) {
 			var handler = require('automesh-' + type);
 
 			handler(remote, function (err, obj) {
-				cb(err, obj, version);
+				cb(err, obj, version, node);
 			});
 		}
 		catch (err) {
-			return cb(err, remote, version);
+			return cb(err, remote, version, node);
 		}
 	}
 };
