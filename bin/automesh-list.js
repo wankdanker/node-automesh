@@ -1,19 +1,19 @@
 var table = require('text-table');
 
 module.exports = function (program, mesh) {
-    console.log('discovering services...');
+    process.stdout.write('discovering services');
     mesh.discover.on('added', function () {
-        console.log('.');
+        process.stdout.write('.');
     });
 
     setTimeout(enumerateServices, 5000);
 
     function enumerateServices () {
-        var columns = ['service', 'version', 'address', 'port', 'id'];
+        var columns = ['service', 'version', 'type', 'hostname', 'address', 'port', 'id'];
         var data    = [columns];
         var services = mesh.query();
 
-        data.push(['----', '-------', '-------', '----', '--']);
+        data.push(['-------', '-------', '----', '--------', '-------', '----', '--']);
 
         services.forEach(function (service) {
             var tmp = [];
@@ -25,7 +25,9 @@ module.exports = function (program, mesh) {
             data.push(tmp);
         });
 
-        console.log(table(data));
+	process.stdout.write('\n');
+        process.stdout.write(table(data));
+	process.stdout.write('\n');
 
         mesh.end();
     }
