@@ -105,7 +105,7 @@ AutoMesh.prototype._processDiscoveredService = function (service, node) {
 	self.emit(role, service, node);
 };
 
-AutoMesh.prototype._listen = function (service, version, type, cb) {
+AutoMesh.prototype._listen = function (service, version, type, cb, readycb) {
 	var self = this;
 	var d = self.discover;
 	var localService = {
@@ -135,6 +135,13 @@ AutoMesh.prototype._listen = function (service, version, type, cb) {
 
 		self.localServices.push(localService);
 
+		//emit a local event for the new service so 
+		//that the server stream is available to the application
+		self.emit("local-service", localService);
+		if (readycb) {
+			readycb(err, localService);
+		}
+
 		//update local services advertisement
 		d.advertise({
 			services : self.localServices.map(function (s) {
@@ -151,12 +158,12 @@ AutoMesh.prototype._listen = function (service, version, type, cb) {
 	});
 };
 
-AutoMesh.prototype.register = function (role, type, cb) {
+AutoMesh.prototype.register = function (role, type, cb, readycb) {
 	var self = this;
 	var service = (role || "").split("@")[0] || null;
 	var version = (role || "").split("@")[1] || null;
 
-	return self._listen(service, version, type, cb);
+	return self._listen(service, version, type, cb, readycb);
 };
 
 AutoMesh.prototype.require = function (key, cb) {

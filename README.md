@@ -65,10 +65,23 @@ services.
 This is a synchronous function that will return an array of services
 currently available. If no service is provided all services are returned.
 
-### mesh.register(service[, type])
+### mesh.register(service, type, connectionListener, readyListener)
 
 * service - service name or servicename@semver to register
-* type - optional, the type of sevice. Used to tell the client how to process the stream
+* type - the type of sevice. Used to tell the client how to process the stream
+* connectionListener - a callback function that is called for each new connection
+* readyListener - a callback function that is called when the service is registered
+		and the stream is available. 
+
+```js
+var server = require('http').createServer(function (req, res) {
+	res.end('hello');
+});
+
+mesh.register('www@1.0.0', null, null, function (err, service) {
+	server.listen(service.server);
+});
+```
 
 ### mesh.require(service, callback)
 
@@ -138,6 +151,23 @@ mesh.on('outbound', function (remote, node) {});
 // or
 mesh.on('server', function (remote, node) {});
 ```
+
+### local-service
+
+Called when a local service has been created
+
+```js
+var server = require('http').createServer(function (req, res) {
+	res.end('hello');
+});
+
+mesh.on('local-service', function (service) {
+	//tell the http server to listen using the newly
+	//registered network stream
+	server.listen(service.server);
+});
+```
+
 
 cli
 ---
