@@ -9,6 +9,7 @@ program
     .version(package.version)
     .option('-p, --port <n>', 'automesh discovery port', Number)
     .option('-k, --key <s>', 'automesh discovery key', String)
+    .option('-b, --broadcast <s>', 'broadcast address', String)
     .parse(process.argv);
 
 if (!program.args.length) {
@@ -19,6 +20,7 @@ if (!program.args.length) {
 var mesh = automesh({ 
 	port : program.port
 	, key : program.key
+	, broadcast : program.broadcast
 	, client : true //only do this when we aren't running something
 });
 
