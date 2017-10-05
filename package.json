@@ -6,7 +6,7 @@
   "dependencies": {
     "commander": "^2.6.0",
     "get-port": "^1.0.0",
-    "node-discover": "^0.5.0",
+    "node-discover": "^0.6.2",
     "semver": "^4.2.0",
     "text-table": "^0.2.0"
   },
